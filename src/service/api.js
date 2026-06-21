@@ -33,6 +33,13 @@ export default async (ctx) => {
     if (storedCookie) {
         cookie = storedCookie.cookie
     }
+    // 环境变量回退（Vercel 无状态部署）
+    if (!cookie && process?.env?.NETEASE_COOKIE && server === 'netease') {
+        cookie = process.env.NETEASE_COOKIE
+    }
+    if (!cookie && process?.env?.TENCENT_COOKIE && server === 'tencent') {
+        cookie = process.env.TENCENT_COOKIE
+    }
 
     let data = await p.get(server).handle(type, id, cookie)
 
