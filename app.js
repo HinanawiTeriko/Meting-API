@@ -57,6 +57,27 @@ app.get('/health', async (c) => {
     const url = await p.get(server).handle('url', '22704470', cookie)
     const isFull = url && !url.includes('try') && !url.includes('trial')
     if (!isFull) {
+        // 邮箱通知：使用 Resend 发送告警邮件
+        const resendKey = process?.env?.RESEND_API_KEY
+        const notifyEmail = process?.env?.NOTIFY_EMAIL
+        if (resendKey && notifyEmail) {
+            try {
+                await fetch('https://api.resend.com/emails', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${resendKey}`,
+                    },
+                    body: JSON.stringify({
+                        from: 'Meting-API <onboarding@resend.dev>',
+                        to: [notifyEmail],
+                        subject: 'Meting-API Cookie 已过期',
+                        html: `<p>平台: ${server}</p><p>时间: ${new Date().toLocaleString('zh-CN')}</p><p>请登录网易云音乐，复制新 Cookie 后更新 Vercel 环境变量 <code>NETEASE_COOKIE</code>，然后重新部署。</p>`,
+                    }),
+                })
+            } catch (e) { /* ignore email error */ }
+        }
+        // 同时支持通用 Webhook 通知
         const webhookUrl = process?.env?.WEBHOOK_URL
         if (webhookUrl) {
             try {
