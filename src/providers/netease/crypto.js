@@ -1,8 +1,8 @@
 // import crypto from 'https://esm.sh/crypto-browserify@3.12.0'
 // import { Buffer } from 'https://esm.sh/buffer@6.0.3'
 
-import crypto from 'crypto-browserify'
-import { Buffer } from 'buffer/index.js'
+import crypto from 'node:crypto'
+import { Buffer } from 'node:buffer'
 
 // import crypto from 'node:crypto'
 // import {Buffer} from 'node:buffer'
