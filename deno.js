@@ -1,6 +1,11 @@
 import config from './src/config.js'
 import app from './app.js'
-import { serve } from 'https://deno.land/std/http/server.ts'
+import { runHealthCheck } from './src/service/health-check.js'
 
+Deno.cron('cookie-health-check', '0 1 * * *', async () => {
+    console.log('[Cron] Running cookie health check...')
+    const result = await runHealthCheck('netease')
+    console.log(`[Cron] Cookie status: ${result.status}`)
+})
 
-serve(app.fetch, { port: config.PORT })
+Deno.serve(app.fetch)
