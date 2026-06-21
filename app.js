@@ -49,17 +49,31 @@ app.get('/health', async (c) => {
         cookie = process.env.TENCENT_COOKIE
     }
     if (!cookie) {
+        c.status(500)
         return c.json({ status: 'no_cookie', message: '未配置 Cookie' })
     }
     const Providers = (await import('./src/providers/index.js')).default
     const p = new Providers()
     const url = await p.get(server).handle('url', '22704470', cookie)
     const isFull = url && !url.includes('try') && !url.includes('trial')
-    return c.json({
-        status: isFull ? 'ok' : 'expired',
-        cookie_valid: isFull,
-        checked_at: new Date().toISOString(),
-    })
+    if (!isFull) {
+        const webhookUrl = process?.env?.WEBHOOK_URL
+        if (webhookUrl) {
+            try {
+                await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title: 'Meting-API Cookie 已过期',
+                        message: `平台: ${server}\n时间: ${new Date().toLocaleString('zh-CN')}\n请更新 Vercel 环境变量后重新部署。`,
+                    }),
+                })
+            } catch (e) { /* ignore webhook error */ }
+        }
+        c.status(503)
+        return c.json({ status: 'expired', cookie_valid: false, checked_at: new Date().toISOString() })
+    }
+    return c.json({ status: 'ok', cookie_valid: true, checked_at: new Date().toISOString() })
 })
 app.get('/', (c) => {
     const baseUrl = get_url(c)
