@@ -90,6 +90,12 @@ export const get_runtime = () => {
   return 'other'
 }
 
+export const getEnv = (key) => {
+  if (globalThis?.process?.env?.[key]) return globalThis.process.env[key]
+  if (globalThis?.Deno?.env?.get(key)) return globalThis.Deno.env.get(key)
+  return null
+}
+
 export const get_url = (ctx) => {
   const runtime = get_runtime()
   const perfix = ctx.req.header('X-Forwarded-Host') || ctx.req.header('X-Forwarded-Url')

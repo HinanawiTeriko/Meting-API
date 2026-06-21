@@ -1,5 +1,5 @@
 import Providers from "../providers/index.js"
-import { format as lyricFormat, get_url } from "../util.js"
+import { format as lyricFormat, get_url, getEnv } from "../util.js"
 import store from "../admin/store.js"
 
 const parseCookieString = (cookieString) => {
@@ -33,12 +33,12 @@ export default async (ctx) => {
     if (storedCookie) {
         cookie = storedCookie.cookie
     }
-    // 环境变量回退（Vercel 无状态部署）
-    if (!cookie && process?.env?.NETEASE_COOKIE && server === 'netease') {
-        cookie = process.env.NETEASE_COOKIE
+    // 环境变量回退（Vercel / Deno Deploy）
+    if (!cookie && getEnv('NETEASE_COOKIE') && server === 'netease') {
+        cookie = getEnv('NETEASE_COOKIE')
     }
-    if (!cookie && process?.env?.TENCENT_COOKIE && server === 'tencent') {
-        cookie = process.env.TENCENT_COOKIE
+    if (!cookie && getEnv('TENCENT_COOKIE') && server === 'tencent') {
+        cookie = getEnv('TENCENT_COOKIE')
     }
 
     let data = await p.get(server).handle(type, id, cookie)

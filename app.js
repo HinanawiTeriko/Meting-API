@@ -8,7 +8,7 @@ import { Hono } from 'hono'
 import { logger } from 'hono/logger'
 import { cors } from 'hono/cors'
 import config from './src/config.js'
-import { get_runtime, get_url } from './src/util.js'
+import { get_runtime, get_url, getEnv } from './src/util.js'
 
 const app = new Hono()
 
@@ -42,11 +42,11 @@ app.get('/health', async (c) => {
     if (storedCookie) {
         cookie = storedCookie.cookie
     }
-    if (!cookie && process?.env?.NETEASE_COOKIE && server === 'netease') {
-        cookie = process.env.NETEASE_COOKIE
+    if (!cookie && getEnv('NETEASE_COOKIE') && server === 'netease') {
+        cookie = getEnv('NETEASE_COOKIE')
     }
-    if (!cookie && process?.env?.TENCENT_COOKIE && server === 'tencent') {
-        cookie = process.env.TENCENT_COOKIE
+    if (!cookie && getEnv('TENCENT_COOKIE') && server === 'tencent') {
+        cookie = getEnv('TENCENT_COOKIE')
     }
     if (!cookie) {
         c.status(500)
@@ -58,8 +58,8 @@ app.get('/health', async (c) => {
     const isFull = url && !url.includes('try') && !url.includes('trial')
     if (!isFull) {
         // 邮箱通知：使用 Resend 发送告警邮件
-        const resendKey = process?.env?.RESEND_API_KEY
-        const notifyEmail = process?.env?.NOTIFY_EMAIL
+        const resendKey = getEnv('RESEND_API_KEY')
+        const notifyEmail = getEnv('NOTIFY_EMAIL')
         if (resendKey && notifyEmail) {
             try {
                 await fetch('https://api.resend.com/emails', {
@@ -78,7 +78,7 @@ app.get('/health', async (c) => {
             } catch (e) { /* ignore email error */ }
         }
         // 同时支持通用 Webhook 通知
-        const webhookUrl = process?.env?.WEBHOOK_URL
+        const webhookUrl = getEnv('WEBHOOK_URL')
         if (webhookUrl) {
             try {
                 await fetch(webhookUrl, {
