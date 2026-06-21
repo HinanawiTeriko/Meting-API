@@ -35,6 +35,32 @@ app.use('*', async (c, next) => {
 
 app.get('/api', api)
 app.get('/test', handler)
+app.get('/health', async (c) => {
+    const server = c.req.query('server') || 'netease'
+    let cookie = ''
+    const storedCookie = store.getActiveCookie(server)
+    if (storedCookie) {
+        cookie = storedCookie.cookie
+    }
+    if (!cookie && process?.env?.NETEASE_COOKIE && server === 'netease') {
+        cookie = process.env.NETEASE_COOKIE
+    }
+    if (!cookie && process?.env?.TENCENT_COOKIE && server === 'tencent') {
+        cookie = process.env.TENCENT_COOKIE
+    }
+    if (!cookie) {
+        return c.json({ status: 'no_cookie', message: '未配置 Cookie' })
+    }
+    const Providers = (await import('./src/providers/index.js')).default
+    const p = new Providers()
+    const url = await p.get(server).handle('url', '22704470', cookie)
+    const isFull = url && !url.includes('try') && !url.includes('trial')
+    return c.json({
+        status: isFull ? 'ok' : 'expired',
+        cookie_valid: isFull,
+        checked_at: new Date().toISOString(),
+    })
+})
 app.get('/', (c) => {
     const baseUrl = get_url(c)
     return c.html(`<!DOCTYPE html>
